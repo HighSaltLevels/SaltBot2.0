@@ -1,5 +1,7 @@
 import os
+import requests
 import discord
+import json
 from random import randint
 
 GIPHY_AUTH = os.getenv('GIPHY_AUTH')
@@ -36,6 +38,9 @@ def jeopardy():
     return '```Sorry this feature is not implemented yet```'
 
 def whisper(author=''):
+    '''
+        This function returns a hello message as a DM to the person who requested
+    '''
     return '```Hello ' + author + '! You can talk to me here (Where no one ' + \
            'hear our mutual salt).```' 
 
@@ -65,8 +70,39 @@ def goodnight(user=''):
         msg = goodnights[randint(0, len(goodnights)-1)]
         return '```Goodnight {}! {}```'.format(user, msg)
 
-def gif():
-    return '```Sorry this feature is not implemented yet```'
+def gif(keywords='whoops', index=None):
+    '''
+        This function uses the giphy api to query and return a gif
+    '''
+
+    # Validate the index
+    try:
+        index = int(index) if index else randint(0, 24)
+        if index < 0 or index > 24:
+            return '```The index must be between 0 and 24```'
+
+    except ValueError:
+        return '```You have to specify a number between 0 and 24 if you want ' + \
+               'query by index!```'
+
+    # Build the keywords for the url
+    search_kw = ''
+    for kw in keywords:
+        search_kw+=(kw + '+')
+
+    # Remove the training '+'
+    search_kw = search_kw[:-1]
+
+    # Request the gif from giphy
+    resp = requests.get('http://api.giphy.com/v1/gifs/search?q=' + search_kw +
+                        '&api_key=' + GIPHY_AUTH)
+
+    # Verify status code and send an error message if not good
+    if resp.status_code != 200:
+        return '```Sorry, I had trouble getting that gif :(```'
+    else:
+        txt_json = json.loads(resp.text)
+        return txt_json['data'][index]['bitly_gif_url']
 
 cmd_dict = {'!help':      help_fun,
             '!jeopardy':  jeopardy,
@@ -100,8 +136,21 @@ async def on_message(msg):
 
             # Or if it is a gif request...
             elif cmd == '!gif':
-                keywords = msg.content.split(' ').pop(cmd)
-                await client.send_message(msg.channel, cmd_dict[cmd](keywords))
+
+                # Get the keywords and grab the index if specified
+                keywords = str(msg.content).split(' ')
+                keywords.remove(cmd)
+                idx = None
+                if '-i' in keywords:
+                    i = 0
+                    for i in range(len(keywords)):
+                        if keywords[i] == '-i':
+                            idx = keywords[i+1]
+                            keywords.remove('-i')
+                            keywords.remove(idx)
+                            break
+                        
+                await client.send_message(msg.channel, cmd_dict[cmd](keywords, idx))
 
             # Otherwise, it is a regular command
             else:
