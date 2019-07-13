@@ -21,8 +21,11 @@ msg_list = ['!help:      Shows this help message.\n',
 
 client = discord.Client()
 
-def help_fun(author=''):
-    ret_msg = '```Good salty day to you ' + author + '! Here\'s a list of ' + \
+def help_fun(user=''):
+    '''
+        This function returns a hel pmessage thag gives a list of commands
+    '''
+    ret_msg = '```Good salty day to you ' + user + '! Here\'s a list of ' + \
           'commands that I understand:\n\n'
     for msg in msg_list:
         ret_msg+=msg
@@ -34,14 +37,33 @@ def help_fun(author=''):
 
     return ret_msg
 
-def jeopardy():
-    return '```Sorry this feature is not implemented yet```'
+def jeopardy(user=''):
+    '''
+        This function returns a 5 jeopardy questions and answers
+    '''
+    # Get a random set of questions
+    rand = randint(0, 18417)
+    resp = requests.get('http://jservice.io/api/category?id={}'.format(rand))
 
-def whisper(author=''):
+    # Verify status code
+    if resp.status_code != 200:
+        return'```I\'m Sorry. Something went wrong getting the questions```'
+
+    # Convert to a json
+    q_and_a = json.loads(resp.text)
+
+    # Build and return the questions and answers
+    msg = 'The Category is: "{}"\n\n'.format(q_and_a['title'])
+    for i in range(5):
+        msg+='Question {}: {}\nAnswer: ||{}||\n\n'.format(i+1, remove_crap(q_and_a['clues'][i]['question']), remove_crap(q_and_a['clues'][i]['answer']))
+
+    return msg
+
+def whisper(user=''):
     '''
         This function returns a hello message as a DM to the person who requested
     '''
-    return '```Hello ' + author + '! You can talk to me here (Where no one ' + \
+    return '```Hello ' + user + '! You can talk to me here (Where no one ' + \
            'hear our mutual salt).```' 
 
 def hi(user=''):
@@ -100,9 +122,12 @@ def gif(keywords='whoops', index=None):
     # Verify status code and send an error message if not good
     if resp.status_code != 200:
         return '```Sorry, I had trouble getting that gif :(```'
-    else:
-        txt_json = json.loads(resp.text)
-        return txt_json['data'][index]['bitly_gif_url']
+
+    txt_json = json.loads(resp.text)
+    return txt_json['data'][index]['bitly_gif_url']
+
+def remove_crap(orig_text):
+    return orig_text.replace('<i>','').replace('</i>','').replace('<b>','').replace('</b>','').replace('\\',' ')
 
 cmd_dict = {'!help':      help_fun,
             '!jeopardy':  jeopardy,
