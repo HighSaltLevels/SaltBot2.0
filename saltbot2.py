@@ -148,7 +148,7 @@ async def on_message(msg):
             ret_msg = ("```Hello. I'm sorry I don't understand " + cmd + ". " 
                   " Please type \"!help\" to see a list of available commands"
                   "\n```")
-            await client.send_message(message.channel, ret_msg)
+            await client.send_message(msg.channel, ret_msg)
         
         # Otherwise, call its assiciated function to get the string to send
         else:
