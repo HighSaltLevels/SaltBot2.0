@@ -169,6 +169,9 @@ async def on_message(msg):
                 if '-i' in keywords:
                     i = 0
                     for i in range(len(keywords)):
+                        if keywords[len(keywords-1)] == '-i':
+                            message = '```Sorry, the last keyword cannot be "-i"```'
+                            await client.send_message(msg.channel, message)
                         if keywords[i] == '-i':
                             idx = keywords[i+1]
                             keywords.remove('-i')
