@@ -36,7 +36,7 @@ def help_fun(user=''):
 
     ret_msg+='\n\nIf you have any further questions/concerns or if SaltBot ' + \
              'goes down, please\nhesitate to contact my developer: ' + \
-             'HighSaltLevels. He\'s salty enough without\nyour help and ' + \
+             'HighSaltLevels. He\'s salty enough\nwithout your help and ' + \
              'doesn\'t write buggy code.\n\nCurrent Version: {}```'.format(VER)
 
     return ret_msg
