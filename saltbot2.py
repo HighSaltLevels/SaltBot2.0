@@ -6,21 +6,22 @@ from random import randint
 
 GIPHY_AUTH = os.getenv('GIPHY_AUTH')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-VER = '2.0.1'
+VER = '2.0.2'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
-                        'answers are marked as\n            spoilers and are not ' +
-                        'revealed until you click them XD\n',
+                        'answers\n            are marked as spoilers and are not ' +
+                        'revealed until you click\n            them XD\n',
             '!whisper:   Get a salty DM from SaltBot. This can be used as a ' +
-                        'playground for\n            experiencing all of the '
+                        'playground\n            for experiencing all of the ' +
                         'salty features.\n',
             '!hi:        Be greeted by SaltBot with a little added salt\n',
             '!goodnight: Hear a salty goodnight from SaltBot\n',
             '!gif:       Type "!gif" followed by keywords to get a cool gif ' +
-                        'For example: !gif dog\n',
+                        'For\n            example: !gif dog\n',
             '!waifu:     Get a picture of a personal waifu that\'s different ' +
-                        'each time\n']
+                        'each time\n',
+            '!anime:     Get an anime recommendation just for you UwU']
 
 client = discord.Client()
 
@@ -34,9 +35,9 @@ def help_fun(user=''):
         ret_msg+=msg
 
     ret_msg+='\n\nIf you have any further questions/concerns or if SaltBot ' + \
-             'goes down, please hesitate to\ncontact my developer: ' + \
-             'HighSaltLevels. He\'s salty enough without your help and ' + \
-             'doesn\'t\nwrite buggy code.\n\nCurrent Version: {}```'.format(VER)
+             'goes down, please\nhesitate to contact my developer: ' + \
+             'HighSaltLevels. He\'s salty enough without\nyour help and ' + \
+             'doesn\'t write buggy code.\n\nCurrent Version: {}```'.format(VER)
 
     return ret_msg
 
@@ -129,7 +130,7 @@ def gif(keywords='whoops', index=None):
     txt_json = json.loads(resp.text)
     return txt_json['data'][index]['bitly_gif_url']
 
-def waifu(user=''):
+def waifu():
     rand = randint(0, 199999)
     url = 'https://www.thiswaifudoesnotexist.net/example-{}.jpg'.format(rand)
     for _ in range(5):
@@ -141,6 +142,16 @@ def waifu(user=''):
     else:
         return None
 
+def anime():
+    for attempt in range(100):
+        rand = randint(0, 40000)
+        url = 'https://myanimelist.net/anime/{}/'.format(rand)
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            return url
+    else:
+        return '```Oops couldn\'t grab that anime. Try again later :(```'
+
 def remove_crap(orig_text):
     return orig_text.replace('<i>','').replace('</i>','').replace('<b>','').replace('</b>','').replace('\\',' ')
 
@@ -150,7 +161,8 @@ cmd_dict = {'!help':      help_fun,
             '!hi':        hi,
             '!goodnight': goodnight,
             '!gif':       gif,
-            '!waifu':     waifu}
+            '!waifu':     waifu,
+            '!anime':     anime}
 
 @client.event
 async def on_message(msg):
@@ -199,12 +211,18 @@ async def on_message(msg):
             # Or if it is a waifu request...
             elif cmd == '!waifu':
                 # Send the file instead
-                if cmd_dict[cmd](author):
+                if cmd_dict[cmd]():
                     await client.send_file(msg.channel, cmd_dict[cmd](author))
                 else:
                     error = '```Sorry. Couldn\'t grab that waifu picture. The internet must ' + \
                             ' broken again :(```'
                     await client.send_message(msg.channel, error)
+
+            # Or if it as an anime request...
+            elif cmd == '!anime':
+                message = '```Searching my database for the perfect anime UwU. Plz be patient...```'
+                await client.send_message(msg.channel, message)
+                await client.send_message(msg.channel, cmd_dict[cmd]())
 
             # Otherwise, it is a regular command
             else:
