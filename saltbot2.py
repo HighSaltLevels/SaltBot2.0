@@ -17,7 +17,9 @@ msg_list = ['!help:      Shows this help message.\n',
             '!hi:        Be greeted by SaltBot with a little added salt\n',
             '!goodnight: Hear a salty goodnight from SaltBot\n',
             '!gif:       Type "!gif" followed by keywords to get a cool gif ' +
-                        'For example: !gif dog\n']
+                        'For example: !gif dog\n',
+            '!waifu:     Get a picture of a personal waifu that\'s different ' +
+                        'each time\n']
 
 client = discord.Client()
 
@@ -126,6 +128,18 @@ def gif(keywords='whoops', index=None):
     txt_json = json.loads(resp.text)
     return txt_json['data'][index]['bitly_gif_url']
 
+def waifu(user=''):
+    rand = randint(0, 199999)
+    url = 'https://www.thiswaifudoesnotexist.net/example-{}.jpg'.format(rand)
+    for _ in range(5):
+        resp = requests.get(url, stream=True)
+        if resp.status_code == 200:
+            with open('temp.jpg', 'wb') as fw:
+                fw.write(resp.content)
+            return 'temp.jpg'
+    else:
+        return None
+
 def remove_crap(orig_text):
     return orig_text.replace('<i>','').replace('</i>','').replace('<b>','').replace('</b>','').replace('\\',' ')
 
@@ -134,7 +148,8 @@ cmd_dict = {'!help':      help_fun,
             '!whisper':   whisper,
             '!hi':        hi,
             '!goodnight': goodnight,
-            '!gif':       gif}
+            '!gif':       gif,
+            '!waifu':     waifu}
 
 @client.event
 async def on_message(msg):
@@ -179,6 +194,16 @@ async def on_message(msg):
                             break
                         
                 await client.send_message(msg.channel, cmd_dict[cmd](keywords, idx))
+
+            # Or if it is a waifu request...
+            elif cmd == '!waifu':
+                # Send the file instead
+                if cmd_dict[cmd](author):
+                    await client.send_file(msg.channel, cmd_dict[cmd](author))
+                else:
+                    error = '```Sorry. Couldn\'t grab that waifu picture. The internet must ' + \
+                            ' broken again :(```'
+                    await client.send_message(msg.channel, error)
 
             # Otherwise, it is a regular command
             else:
