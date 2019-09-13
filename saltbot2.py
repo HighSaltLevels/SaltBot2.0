@@ -6,6 +6,7 @@ from random import randint
 
 GIPHY_AUTH = os.getenv('GIPHY_AUTH')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+VER = '2.0.1'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
@@ -25,7 +26,7 @@ client = discord.Client()
 
 def help_fun(user=''):
     '''
-        This function returns a hel pmessage thag gives a list of commands
+        This function returns a help message thag gives a list of commands
     '''
     ret_msg = '```Good salty day to you ' + user + '! Here\'s a list of ' + \
           'commands that I understand:\n\n'
@@ -35,7 +36,7 @@ def help_fun(user=''):
     ret_msg+='\n\nIf you have any further questions/concerns or if SaltBot ' + \
              'goes down, please hesitate to\ncontact my developer: ' + \
              'HighSaltLevels. He\'s salty enough without your help and ' + \
-             'doesn\'t\nwrite buggy code.```'
+             'doesn\'t\nwrite buggy code.\n\nCurrent Version: {}```'.format(VER)
 
     return ret_msg
 
