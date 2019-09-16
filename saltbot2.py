@@ -6,7 +6,7 @@ from random import randint
 
 GIPHY_AUTH = os.getenv('GIPHY_AUTH')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-VER = '2.0.2'
+VER = '2.0.3'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
@@ -143,14 +143,30 @@ def waifu():
         return None
 
 def anime():
-    for attempt in range(100):
-        rand = randint(0, 40000)
-        url = 'https://myanimelist.net/anime/{}/'.format(rand)
-        resp = requests.get(url)
-        if resp.status_code == 200:
-            return url
-    else:
-        return '```Oops couldn\'t grab that anime. Try again later :(```'
+    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux i586; rv:63.0) Gecko/20100101 Firefox/63.0.'}
+    resp = requests.get('https://anidb.net/anime/random', headers=headers)
+    if resp.status_code != 200:
+        return '```Sowwy. Couldn\'t connect to the internet to get an anime recommendation :(```'
+    data = resp.text
+    title_idx = data.find('<title>')
+    title_idx+=1
+    title = ''
+    for char in data[title_idx:]:
+        if char == '<':
+            break
+        else:
+            title+=char
+    title = title[6:-15]
+
+    description_idx = data.find('content=')
+    description_idx+=8
+    description = ''
+    for char in data[description_idx:]:
+        if char == '/':
+            break
+        else:
+            description+=char
+    return '```Here\'s an anime for you:\n\nTitle:\n{}\n\nDescription:\n{}```'.format(title, description)
 
 def remove_crap(orig_text):
     return orig_text.replace('<i>','').replace('</i>','').replace('<b>','').replace('</b>','').replace('\\',' ')
@@ -212,7 +228,7 @@ async def on_message(msg):
             elif cmd == '!waifu':
                 # Send the file instead
                 if cmd_dict[cmd]():
-                    await client.send_file(msg.channel, cmd_dict[cmd](author))
+                    await client.send_file(msg.channel, cmd_dict[cmd]())
                 else:
                     error = '```Sorry. Couldn\'t grab that waifu picture. The internet must ' + \
                             ' broken again :(```'
