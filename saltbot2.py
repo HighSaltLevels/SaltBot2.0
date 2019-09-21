@@ -6,7 +6,7 @@ from random import randint
 
 GIPHY_AUTH = os.getenv('GIPHY_AUTH')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-VER = '2.0.3'
+VER = '2.0.4'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
@@ -213,9 +213,10 @@ async def on_message(msg):
                 if '-i' in keywords:
                     i = 0
                     for i in range(len(keywords)):
-                        if keywords[len(keywords-1)] == '-i':
+                        if keywords[len(keywords)-1] == '-i':
                             message = '```Sorry, the last keyword cannot be "-i"```'
                             await client.send_message(msg.channel, message)
+                            return
                         if keywords[i] == '-i':
                             idx = keywords[i+1]
                             keywords.remove('-i')
