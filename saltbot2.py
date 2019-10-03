@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 BOT_TOKEN = os.environ['BOT_TOKEN']
 GIPHY_AUTH = os.environ['GIPHY_AUTH']
 EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
-VER = '2.1.0'
+VER = '2.1.1'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
