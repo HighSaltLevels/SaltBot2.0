@@ -2,15 +2,15 @@ import os
 import requests
 import discord
 import json
+import smtplib
+import traceback
 from random import randint
+from email.mime.text import MIMEText
 
-with open('auth', 'r') as fread:
-	auth_data = fread.read().split('\n')
-
-BOT_TOKEN = auth_data[0]
-GIPHY_AUTH = auth_data[1]
-os.system('rm auth')
-VER = '2.0.5'
+BOT_TOKEN = os.environ['BOT_TOKEN']
+GIPHY_AUTH = os.environ['GIPHY_AUTH']
+EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
+VER = '2.1.0'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
@@ -256,4 +256,19 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
-client.run(BOT_TOKEN)
+while True:
+    try:
+        client.run(BOT_TOKEN)
+    except Exception as error:
+        error_msg = traceback.format_exc()        
+        s=smtplib.SMTP('smtp.gmail.com', 587)
+        s.ehlo()
+        s.starttls()
+        s.login('swdrummer13', EMAIL_PASSWORD)
+        body = 'SaltBot crashed!\n' + error_msg
+        msg = MIMEText(body)
+        msg['Subject'] = 'SaltBot Crashed'
+        msg['From'] = 'Me'
+        msg['To'] = 'davidgreeson13@gmail.com'
+        s.send_message(msg)
+        s.quit()

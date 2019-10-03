@@ -6,10 +6,15 @@ RUN apt-get update && \
                  discord==0.16.12 && \
 	mkdir -p /opt/saltbot
 
-ENV GIPHY_AUTH=${GIPHY_AUTH} \
-	BOT_TOKEN=${BOT_TOKEN}
+ARG GIPHY_AUTH
+ARG BOT_TOKEN
+ARG EMAIL_PASSWORD
 
-COPY goodnights.txt greetings.txt saltbot2.py auth /opt/saltbot/
+ENV GIPHY_AUTH=${GIPHY_AUTH} \
+	BOT_TOKEN=${BOT_TOKEN} \
+	EMAIL_PASSWORD=${EMAIL_PASSWORD}
+
+COPY goodnights.txt greetings.txt saltbot2.py /opt/saltbot/
 
 WORKDIR /opt/saltbot
 
