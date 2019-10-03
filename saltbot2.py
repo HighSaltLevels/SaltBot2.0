@@ -175,6 +175,9 @@ def anime():
 def remove_crap(orig_text):
     return orig_text.replace('<i>','').replace('</i>','').replace('<b>','').replace('</b>','').replace('\\',' ')
 
+def log(author, msg):
+    print('{}: {}'.format(author, msg))
+
 cmd_dict = {'!help':      help_fun,
             '!jeopardy':  jeopardy,
             '!whisper':   whisper,
@@ -196,6 +199,7 @@ async def on_message(msg):
             ret_msg = ("```Hello. I'm sorry I don't understand " + cmd + ". " 
                   " Please type \"!help\" to see a list of available commands"
                   "\n```")
+            log(msg.author, 'invalid command {}'.format(cmd))
             await client.send_message(msg.channel, ret_msg)
         
         # Otherwise, call its assiciated function to get the string to send
@@ -205,14 +209,15 @@ async def on_message(msg):
 
             # If it is a whisper request...
             if cmd == '!whisper':
+                log(msg.author, 'dm sent')
                 await client.send_message(msg.author, cmd_dict[cmd](author))
 
             # Or if it is a gif request...
             elif cmd == '!gif':
-
                 # Get the keywords and grab the index if specified
                 keywords = str(msg.content).split(' ')
                 keywords.remove(cmd)
+                log(msg.author, 'sending gif - "{}"'.format(keywords))
                 idx = None
                 if '-i' in keywords:
                     i = 0
@@ -226,27 +231,30 @@ async def on_message(msg):
                             keywords.remove('-i')
                             keywords.remove(idx)
                             break
-                        
                 await client.send_message(msg.channel, cmd_dict[cmd](keywords, idx))
 
             # Or if it is a waifu request...
             elif cmd == '!waifu':
                 # Send the file instead
                 if cmd_dict[cmd]():
+                    log(msg.author, 'sending waifu')
                     await client.send_file(msg.channel, cmd_dict[cmd]())
                 else:
                     error = '```Sorry. Couldn\'t grab that waifu picture. The internet must ' + \
                             ' broken again :(```'
+                    log(msg.author, 'failed to send waifu')
                     await client.send_message(msg.channel, error)
 
             # Or if it as an anime request...
             elif cmd == '!anime':
                 message = '```Searching my database for the perfect anime UwU. Plz be patient...```'
                 await client.send_message(msg.channel, message)
+                log(msg.author, 'sending anime')
                 await client.send_message(msg.channel, cmd_dict[cmd]())
 
             # Otherwise, it is a regular command
             else:
+                log(msg.author, 'sending {}'.format(cmd))
                 await client.send_message(msg.channel, cmd_dict[cmd](author))
 
 @client.event
