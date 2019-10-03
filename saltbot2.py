@@ -260,7 +260,8 @@ while True:
     try:
         client.run(BOT_TOKEN)
     except Exception as error:
-        error_msg = traceback.format_exc()        
+        error_msg = traceback.format_exc()
+        print(error_msg) 
         s=smtplib.SMTP('smtp.gmail.com', 587)
         s.ehlo()
         s.starttls()
