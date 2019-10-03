@@ -264,20 +264,20 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
-while True:
-    try:
-        client.run(BOT_TOKEN)
-    except Exception as error:
-        error_msg = traceback.format_exc()
-        print(error_msg) 
-        s=smtplib.SMTP('smtp.gmail.com', 587)
-        s.ehlo()
-        s.starttls()
-        s.login('swdrummer13', EMAIL_PASSWORD)
-        body = 'SaltBot crashed!\n' + error_msg
-        msg = MIMEText(body)
-        msg['Subject'] = 'SaltBot Crashed'
-        msg['From'] = 'Me'
-        msg['To'] = 'davidgreeson13@gmail.com'
-        s.send_message(msg)
-        s.quit()
+try:
+    client.run(BOT_TOKEN)
+except Exception as error:
+    error_msg = traceback.format_exc()
+    print(error_msg) 
+    s=smtplib.SMTP('smtp.gmail.com', 587)
+    s.ehlo()
+    s.starttls()
+    s.login('swdrummer13', EMAIL_PASSWORD)
+    body = 'SaltBot crashed!\n' + error_msg
+    msg = MIMEText(body)
+    msg['Subject'] = 'SaltBot Crashed'
+    msg['From'] = 'Me'
+    msg['To'] = 'davidgreeson13@gmail.com'
+    s.send_message(msg)
+    s.quit()
+    os.system('reboot')
