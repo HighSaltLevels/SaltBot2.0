@@ -114,7 +114,6 @@ def gif(keywords='whoops', index=None):
     except ValueError:
         return '```You have to specify a number between 0 and 24 if you want ' + \
                'query by index!```'
-
     # Build the keywords for the url
     search_kw = ''
     for kw in keywords:
@@ -188,7 +187,7 @@ cmd_dict = {'!help':      help_fun,
             '!anime':     anime,
             '!h':         help_fun,
             '!j':         jeopardy,
-            '!p':         whisper,
+            '!pm':         whisper,
             '!i':         hi,
             '!n':         goodnight,
             '!g':         gif,
@@ -216,7 +215,7 @@ async def on_message(msg):
             author = str(msg.author).split('#')[0]
 
             # If it is a whisper request...
-            if cmd.startswith('!p'):
+            if cmd in ('!pm', '!whisper'):
                 log(msg.author, 'dm sent')
                 await client.send_message(msg.author, cmd_dict[cmd](author))
 
