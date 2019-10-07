@@ -185,7 +185,15 @@ cmd_dict = {'!help':      help_fun,
             '!goodnight': goodnight,
             '!gif':       gif,
             '!waifu':     waifu,
-            '!anime':     anime}
+            '!anime':     anime,
+            '!h':         help_fun,
+            '!j':         jeopardy,
+            '!p':         whisper,
+            '!i':         hi,
+            '!n':         goodnight,
+            '!g':         gif,
+            '!w':         waifu,
+            '!a':         anime}
 
 @client.event
 async def on_message(msg):
@@ -208,33 +216,38 @@ async def on_message(msg):
             author = str(msg.author).split('#')[0]
 
             # If it is a whisper request...
-            if cmd == '!whisper':
+            if cmd.startswith('!p'):
                 log(msg.author, 'dm sent')
                 await client.send_message(msg.author, cmd_dict[cmd](author))
 
             # Or if it is a gif request...
-            elif cmd == '!gif':
+            elif cmd.startswith('!g'):
                 # Get the keywords and grab the index if specified
                 keywords = str(msg.content).split(' ')
                 keywords.remove(cmd)
-                log(msg.author, 'sending gif - "{}"'.format(keywords))
-                idx = None
-                if '-i' in keywords:
-                    i = 0
-                    for i in range(len(keywords)):
-                        if keywords[len(keywords)-1] == '-i':
-                            message = '```Sorry, the last keyword cannot be "-i"```'
-                            await client.send_message(msg.channel, message)
-                            return
-                        if keywords[i] == '-i':
-                            idx = keywords[i+1]
-                            keywords.remove('-i')
-                            keywords.remove(idx)
-                            break
-                await client.send_message(msg.channel, cmd_dict[cmd](keywords, idx))
+                if not keywords:
+                    log(msg.author, 'no gif to query')
+                    message = '```You didn\'t give me a keyword to query :(```'
+                    await client.send_message(msg.channel, message)
+                else:
+                    log(msg.author, 'sending gif - "{}"'.format(keywords))
+                    idx = None
+                    if '-i' in keywords:
+                        i = 0
+                        for i in range(len(keywords)):
+                            if keywords[len(keywords)-1] == '-i':
+                                message = '```Sorry, the last keyword cannot be "-i"```'
+                                await client.send_message(msg.channel, message)
+                                return
+                            if keywords[i] == '-i':
+                                idx = keywords[i+1]
+                                keywords.remove('-i')
+                                keywords.remove(idx)
+                                break
+                    await client.send_message(msg.channel, cmd_dict[cmd](keywords, idx))
 
             # Or if it is a waifu request...
-            elif cmd == '!waifu':
+            elif cmd.startswith('!w'):
                 # Send the file instead
                 if cmd_dict[cmd]():
                     log(msg.author, 'sending waifu')
@@ -246,7 +259,7 @@ async def on_message(msg):
                     await client.send_message(msg.channel, error)
 
             # Or if it as an anime request...
-            elif cmd == '!anime':
+            elif cmd.startswith('!a'):
                 message = '```Searching my database for the perfect anime UwU. Plz be patient...```'
                 await client.send_message(msg.channel, message)
                 log(msg.author, 'sending anime')
