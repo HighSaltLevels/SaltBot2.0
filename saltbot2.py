@@ -134,7 +134,7 @@ def gif(keywords='whoops', index=None):
     return txt_json['data'][index]['bitly_gif_url']
 
 def waifu():
-    rand = randint(0, 199999)
+    rand = randint(0, 99999)
     url = 'https://www.thiswaifudoesnotexist.net/example-{}.jpg'.format(rand)
     for _ in range(5):
         resp = requests.get(url, stream=True)
@@ -142,8 +142,9 @@ def waifu():
             with open('temp.jpg', 'wb') as fw:
                 fw.write(resp.content)
             return 'temp.jpg'
-    else:
-        return None
+        else:
+            log('admin', f'Got HTTP Status {resp.status_code} with content -> {resp.text}')
+    return None
 
 def anime():
     headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux i586; rv:63.0) Gecko/20100101 Firefox/63.0.'}
@@ -247,10 +248,11 @@ async def on_message(msg):
 
             # Or if it is a waifu request...
             elif cmd.startswith('!w'):
+                waifu = cmd_dict[cmd]()
                 # Send the file instead
-                if cmd_dict[cmd]():
+                if waifu:
                     log(msg.author, 'sending waifu')
-                    await client.send_file(msg.channel, cmd_dict[cmd]())
+                    await client.send_file(msg.channel, waifu)
                 else:
                     error = '```Sorry. Couldn\'t grab that waifu picture. The internet must ' + \
                             ' broken again :(```'
