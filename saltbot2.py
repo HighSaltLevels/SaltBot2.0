@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 BOT_TOKEN = os.environ['BOT_TOKEN']
 GIPHY_AUTH = os.environ['GIPHY_AUTH']
 EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
-VER = '2.1.1'
+VER = '2.1.2'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
@@ -26,6 +26,9 @@ msg_list = ['!help:      Shows this help message.\n',
             '!waifu:     Get a picture of a personal waifu that\'s different ' +
                         'each time\n',
             '!anime:     Get an anime recommendation just for you UwU']
+
+with open('log.txt', 'w'):
+    pass
 
 client = discord.Client()
 
@@ -176,7 +179,9 @@ def remove_crap(orig_text):
     return orig_text.replace('<i>','').replace('</i>','').replace('<b>','').replace('</b>','').replace('\\',' ')
 
 def log(author, msg):
-    print('{}: {}'.format(author, msg))
+    print(f'{author}: {msg}')
+    with open('log.txt', 'a') as f:
+        f.write(f'{author}: {msg}\n')
 
 cmd_dict = {'!help':      help_fun,
             '!jeopardy':  jeopardy,
