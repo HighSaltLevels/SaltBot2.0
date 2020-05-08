@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 BOT_TOKEN = os.environ['BOT_TOKEN']
 GIPHY_AUTH = os.environ['GIPHY_AUTH']
 EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
-VER = '2.1.2'
+VER = '2.1.3'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
@@ -103,42 +103,63 @@ def goodnight(user=''):
         msg = goodnights[randint(0, len(goodnights)-1)]
         return '```Goodnight {}! {}```'.format(user, msg)
 
-def gif(keywords='whoops', index=None):
-    '''
-        This function uses the giphy api to query and return a gif
-    '''
-
-    # Validate the index
-    try:
-        index = int(index) if index else randint(0, 24)
-        if index < 0 or index > 24:
-            return '```The index must be between 0 and 24```'
-
-    except ValueError:
-        return '```You have to specify a number between 0 and 24 if you want ' + \
-               'query by index!```'
-    # Build the keywords for the url
+def form_query(keywords):
     search_kw = ''
     for kw in keywords:
         search_kw+=(kw + '+')
 
-    # Remove the training '+'
-    search_kw = search_kw[:-1]
+    return f'http://api.giphy.com/v1/gifs/search?q={search_kw[:-1]}&api_key={GIPHY_AUTH}'
 
-    # Request the gif from giphy
-    resp = requests.get('http://api.giphy.com/v1/gifs/search?q=' + search_kw +
-                        '&api_key=' + GIPHY_AUTH)
-
-    # Verify status code and send an error message if not good
+def send_all_gifs(keywords='whoops'):
+    url = form_query(keywords)
+    resp = requests.get(url)
     if resp.status_code != 200:
         return '```Sorry, I had trouble getting that gif :(```'
 
-    txt_json = json.loads(resp.text)
-    return txt_json['data'][index]['bitly_gif_url']
+    json_resp = resp.json()
+    
+    num_gifs = len(json_resp['data'])
+    if num_gifs == 0:
+        return '```Sorry, there were no gifs of that query :(```'
+
+    return [json_resp['data'][index]['bitly_gif_url'] for index in range(num_gifs)]
+
+def gif(keywords='whoops', index=None):
+    '''
+        This function uses the giphy api to query and return a gif
+    '''
+    url = form_query(keywords)
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        return '```Sorry, I had trouble getting that gif :(```'
+
+    json_resp = resp.json()
+
+    num_gifs = len(json_resp['data'])
+    if num_gifs == 0:
+        return '```Sorry, there were no gifs of that query :(```'
+
+    if index:
+        try:
+            index = int(index)
+        except ValueError:
+            return '```You have to specify a number between 0 and 24 if you want ' + \
+                   'query by index!```'
+
+        if index >= num_gifs:
+            return '```Sorry, I didn\'t have enough gifs to get to that index```'
+
+        if index < 0 or index > 24:
+            return '```The index must be between 0 and 24```'
+
+    else:
+        index = randint(0, num_gifs - 1)
+
+    return json_resp['data'][index]['bitly_gif_url']
 
 def waifu():
     rand = randint(0, 99999)
-    url = 'https://www.thiswaifudoesnotexist.net/example-{}.jpg'.format(rand)
+    url = f'https://www.thiswaifudoesnotexist.net/example-{rand}.jpg'
     for _ in range(5):
         resp = requests.get(url, stream=True)
         if resp.status_code == 200:
@@ -189,6 +210,7 @@ cmd_dict = {'!help':      help_fun,
             '!hi':        hi,
             '!goodnight': goodnight,
             '!gif':       gif,
+            '!gifall':    send_all_gifs,
             '!waifu':     waifu,
             '!anime':     anime,
             '!h':         help_fun,
@@ -197,6 +219,7 @@ cmd_dict = {'!help':      help_fun,
             '!i':         hi,
             '!n':         goodnight,
             '!g':         gif,
+            '!gall':    send_all_gifs,
             '!w':         waifu,
             '!a':         anime}
 
@@ -249,6 +272,18 @@ async def on_message(msg):
                                 keywords.remove('-i')
                                 keywords.remove(idx)
                                 break
+                    elif '-a' in keywords:
+                        if not isinstance(msg.channel, discord.channel.PrivateChannel):
+                            err = '```You can only use -a in a DM!```'
+                            await client.send_message(msg.channel, err)
+                            return
+                        else:
+                            keywords.remove('-a')
+                            gifs = cmd_dict[cmd+'all'](keywords)
+                            for gif in gifs:
+                                await client.send_message(msg.channel, gif)
+                            return
+
                     await client.send_message(msg.channel, cmd_dict[cmd](keywords, idx))
 
             # Or if it is a waifu request...
