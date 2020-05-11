@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 BOT_TOKEN = os.environ['BOT_TOKEN']
 GIPHY_AUTH = os.environ['GIPHY_AUTH']
 EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
-VER = '2.1.3'
+VER = '2.1.4'
 
 msg_list = ['!help:      Shows this help message.\n',
             '!jeopardy:  Receive a category with 5 questions and answers. The ' +
@@ -25,7 +25,8 @@ msg_list = ['!help:      Shows this help message.\n',
                         'For\n            example: !gif dog\n',
             '!waifu:     Get a picture of a personal waifu that\'s different ' +
                         'each time\n',
-            '!anime:     Get an anime recommendation just for you UwU']
+            '!anime:     Get an anime recommendation just for you UwU',
+            '!nut:       Receive a funny nut \'n go line']
 
 with open('log.txt', 'w'):
     pass
@@ -196,6 +197,13 @@ def anime():
             description+=char
     return '```Here\'s an anime for you:\n\nTitle:\n{}\n\nDescription:\n{}```'.format(title, description)
 
+def nut(user=''):
+    with open('nut.txt') as fread:
+        lines = [line for line in fread.readlines()]
+
+    rand = randint(0, len(lines)-1)
+    return f'```Remember {user}, don\'t {lines[rand]}```'
+
 def remove_crap(orig_text):
     return orig_text.replace('<i>','').replace('</i>','').replace('<b>','').replace('</b>','').replace('\\',' ')
 
@@ -213,15 +221,17 @@ cmd_dict = {'!help':      help_fun,
             '!gifall':    send_all_gifs,
             '!waifu':     waifu,
             '!anime':     anime,
+            '!nut':       nut,
             '!h':         help_fun,
             '!j':         jeopardy,
             '!pm':         whisper,
             '!i':         hi,
             '!n':         goodnight,
             '!g':         gif,
-            '!gall':    send_all_gifs,
+            '!gall':      send_all_gifs,
             '!w':         waifu,
-            '!a':         anime}
+            '!a':         anime,
+            '!u':         nut}
 
 @client.event
 async def on_message(msg):
