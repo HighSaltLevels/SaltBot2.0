@@ -25,7 +25,7 @@ msg_list = ['!help:      Shows this help message.\n',
                         'For\n            example: !gif dog\n',
             '!waifu:     Get a picture of a personal waifu that\'s different ' +
                         'each time\n',
-            '!anime:     Get an anime recommendation just for you UwU',
+            '!anime:     Get an anime recommendation just for you UwU\n',
             '!nut:       Receive a funny nut \'n go line']
 
 with open('log.txt', 'w'):
