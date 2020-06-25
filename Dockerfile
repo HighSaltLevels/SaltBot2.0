@@ -14,7 +14,8 @@ ENV GIPHY_AUTH=${GIPHY_AUTH} \
 	BOT_TOKEN=${BOT_TOKEN} \
 	EMAIL_PASSWORD=${EMAIL_PASSWORD}
 
-COPY goodnights.txt greetings.txt nut.txt saltbot2.py /opt/saltbot/
+COPY saltbot2.py /opt/saltbot/
+COPY lib /opt/saltbot/
 
 WORKDIR /opt/saltbot
 
