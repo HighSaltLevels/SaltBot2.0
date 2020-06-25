@@ -18,8 +18,6 @@ MSG_DICT = {
         "Get a salty DM from SaltBot. This can be used as a "
         "playground for experiencing all of the salty features"
     ),
-    "!hi (!i)": "Be greeted by SaltBot with a little added salt",
-    "!goodnight (!n)": "Hear a salty goodnight from SaltBot.",
     "!gif (!g)": (
         "Type !gif followed by keywords to get a cool gif. For " "example: !gif dog"
     ),
@@ -42,10 +40,6 @@ class Command(object):
             "!u": self._nut,
             "!jeopardy": self._jeopardy,
             "!j": self._jeopardy,
-            "!hi": self._hi,
-            "!i": self._hi,
-            "!goodnight": self._goodnight,
-            "!n": self._goodnight,
             "!help": self._help,
             "!h": self._help,
             "!waifu": self._waifu,
@@ -114,32 +108,6 @@ class Command(object):
                 "mutual salt).```"
             ),
         )
-
-    def _hi(self, *args):
-        """
-            Read greetings.txt and returns a random hello message
-        """
-
-        # Read all of the greetings into memory
-        with open("greetings.txt", "r") as greets:
-            hellos = [line for line in greets.readlines()]
-
-        # Get a random number to index with and return the message
-        msg = hellos[randint(0, len(hellos) - 1)]
-        return "text", f"```Hi {self._user}! {msg}```"
-
-    def _goodnight(self, *args):
-        """
-            Read goodnights.txt and returns a random goodnight message
-        """
-
-        # Read all of the goodnights into memory
-        with open("goodnights.txt", "r") as nights:
-            goodnights = [line for line in nights.readlines()]
-
-        # Get a random number to index with and return the message
-        msg = goodnights[randint(0, len(goodnights) - 1)]
-        return "text", f"```Goodnight {self._user}! {msg}```"
 
     def _gif(self, *args):
         """
