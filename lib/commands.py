@@ -66,8 +66,8 @@ class Command(object):
 
         ret_msg += (
             "If you have any further questions/concerns or if SaltBot "
-            "goes down, pleasehesitate to contact my developer: "
-            "HighSaltLevels. He's salty enoughwithout your help and "
+            "goes down, please hesitate to contact my developer: "
+            "HighSaltLevels. He's salty enough without your help and "
             f"doesn't write buggy code. Current Version: {VERSION}```"
         )
 
