@@ -25,7 +25,7 @@ async def on_message(msg):
 
         else:
             type_, resp = bot_cmd.commands[cmd](*args)
-            LOGGER.log_sent(msg.author, msg.channel, resp)
+            LOGGER.log_sent(msg.author, msg.channel, cmd)
 
             if type_ == "text":
                 await msg.channel.send(resp)
