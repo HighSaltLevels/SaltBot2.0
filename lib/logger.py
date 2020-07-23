@@ -4,7 +4,7 @@ class Logger(object):
         self._initialize_logfile()
 
     def log_sent(self, author, channel, msg):
-        print(f"{author} in {channel} <- {msg}")
+        print(f"{author} in {channel} <- {msg}\n")
         with open(self._logfile, "a") as stream:
             stream.write(f"{author} in {channel} <- {msg}\n")
 
@@ -16,7 +16,7 @@ class Logger(object):
     def log(self, msg):
         print(msg)
         with open(self._logfile, "a") as stream:
-            stream.write(msg)
+            stream.write(f"{msg}\n")
 
     def _initialize_logfile(self):
         with open(self._logfile, "w"):
