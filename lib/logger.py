@@ -13,6 +13,11 @@ class Logger(object):
         with open(self._logfile, "a") as stream:
             stream.write(f"{author} from {channel} -> {msg}\n")
 
+    def log(self, msg):
+        print(msg)
+        with open(self._logfile, "a") as stream:
+            stream.write(msg)
+
     def _initialize_logfile(self):
         with open(self._logfile, "w"):
             pass
