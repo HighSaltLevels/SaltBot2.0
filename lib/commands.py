@@ -4,7 +4,7 @@ from random import randint
 import discord
 import requests
 
-from lib.constants import VERSION
+from lib.version import VERSION
 from lib.giphy import Giphy, GiphyError
 
 MSG_DICT = {
