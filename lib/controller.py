@@ -34,6 +34,8 @@ async def on_message(msg):
             elif type_ == "list":
                 for item in resp:
                     await msg.channel.send(item)
+            elif type_ == "user":
+                    await msg.author.send(resp)
             else:
                 err_msg = "```Unexpected error :(```"
                 await msg.channel.send(err_msg)

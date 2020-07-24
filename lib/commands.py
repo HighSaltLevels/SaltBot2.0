@@ -102,7 +102,7 @@ class Command(object):
             Return a hello message as a DM to the person who requested
         """
         return (
-            "text",
+            "user",
             (
                 f"```Hello {self._user}! You can talk to me here (Where no one can hear our "
                 "mutual salt).```"
