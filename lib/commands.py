@@ -7,8 +7,9 @@ import uuid
 import discord
 import requests
 
-from lib.version import VERSION
 from lib.giphy import Giphy, GiphyError
+from lib.poll import POLL_DIR
+from lib.version import VERSION
 
 MSG_DICT = {
     "!help (!h)": "Shows this help message.",
@@ -49,8 +50,6 @@ UNIT_DICT = {
     "second": 1,
 }
 
-os.makedirs("./polls/", exist_ok=True)
-
 
 def parse_expiry(expiry_str):
     """
@@ -74,7 +73,7 @@ def write_poll(prompt, choices, expiry, poll_id, channel_id, votes):
         "channel_id": channel_id,
         "votes": votes,
     }
-    with open(f"./polls/{poll_id}.json", "w") as stream:
+    with open(f"{POLL_DIR}/{poll_id}.json", "w") as stream:
         stream.write(json.dumps(data))
 
 
@@ -141,7 +140,7 @@ class Command(object):
             )
 
         try:
-            with open(f"./polls/{poll_id}.json", "r") as stream:
+            with open(f"{POLL_DIR}/{poll_id}.json", "r") as stream:
                 poll_data = json.loads(stream.read())
         except FileNotFoundError:
             return "text", f"```Poll {poll_id} does not exist or has expired```"
@@ -155,7 +154,6 @@ class Command(object):
             return "text", f"{response}```"
 
         for option, takers in poll_data["votes"].items():
-            print(f"option->{option}, takers->{takers}")
             if self._full_user in takers:
                 poll_data["votes"][option].remove(self._full_user)
 
@@ -169,6 +167,9 @@ class Command(object):
         """
         if "help" in self._user_msg.content.lower():
             return "text", POLL_HELP_MSG
+
+        if isinstance(self._channel, discord.channel.DMChannel):
+            return "text", "```Polls don't work in DMs :(```"
 
         full_phrase = " ".join(args)
         choices = [phrase.strip() for phrase in self._user_msg.content.split(";")]
