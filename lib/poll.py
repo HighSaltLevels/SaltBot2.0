@@ -24,13 +24,12 @@ async def monitor_polls(discord_client):
                     total_for_this_choice = len(poll_data["votes"][str(choice_num)])
                     results[choice_num] = total_for_this_choice
                     total_votes += total_for_this_choice
-                    
-                print(total_votes)
+
                 response = "```Results:\n\n"
                 try:
                     for result in results:
                         choice = poll_data["choices"][result]
-                        response += f"\t{choice} -> {int(len(poll_data['votes'][str(result)])/total_votes) * 100}%\n"
+                        response += f"\t{choice} -> {float(len(poll_data['votes'][str(result)])/total_votes) * 100:.0f}%\n"
                 except ZeroDivisionError:
                     response = "```No one voted on this poll :("
 
