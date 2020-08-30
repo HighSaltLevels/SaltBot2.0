@@ -25,7 +25,7 @@ async def monitor_polls(discord_client):
                     results[choice_num] = total_for_this_choice
                     total_votes += total_for_this_choice
 
-                response = "```Results:\n\n"
+                response = f"```Results (Total votes: {total_votes}):\n\n"
                 try:
                     for result in results:
                         choice = poll_data["choices"][result]
