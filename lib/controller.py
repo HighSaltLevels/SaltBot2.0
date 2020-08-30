@@ -1,3 +1,8 @@
+import asyncio
+import glob
+import json
+import time
+
 import discord
 
 from lib.commands import Command
@@ -35,7 +40,7 @@ async def on_message(msg):
                 for item in resp:
                     await msg.channel.send(item)
             elif type_ == "user":
-                    await msg.author.send(resp)
+                await msg.author.send(resp)
             else:
                 err_msg = "```Unexpected error :(```"
                 await msg.channel.send(err_msg)
@@ -47,3 +52,29 @@ async def on_ready():
     LOGGER.log(CLIENT.user.name)
     LOGGER.log(str(CLIENT.user.id))
     await CLIENT.change_presence(activity=discord.Game(name="The Salt Shaker"))
+
+
+async def monitor_polls():
+    while True:
+        polls = glob.glob("./polls/*")
+        for poll in polls:
+            with open(poll) as stream:
+                poll_data = json.loads(stream.read())
+            if time.time() > poll_data["expiry"]:
+                channel = CLIENT.get_channel(poll_data["channel_id"])
+                total_choices = len(poll_data["choices"])
+                results = {}
+                for choice_num in range(total_choices):
+                    results[coice_num] = len(poll_data["choices"][choice_num])
+
+                response = "```Results:\n\n"
+                for result in results:
+                    choice = poll_data["choices"][str(result)]
+                    response += "\t{choice] -> {int(len(choice)/total_choices)}}\n"
+
+                await channel.send(f"{response}```")
+
+        await asyncio.sleep(5)
+
+
+POLL_THREAD = asyncio.create_task(monitor_polls())

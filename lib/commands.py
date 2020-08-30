@@ -1,5 +1,8 @@
 import json
+import os
 from random import randint
+import time
+import uuid
 
 import discord
 import requests
@@ -24,14 +27,64 @@ MSG_DICT = {
     "!waifu (!w)": ("Get a picture of a personal waifu that's different each" "time"),
     "!anime (!a)": "Get an anime recommendation just for you UwU",
     "!nut (!n)": "Receive a funny nut 'n go line",
+    "!poll (!p)": 'Type "!poll help" for detailed information',
+    "!vote (!v)": 'Vote in a poll. Type "!vote <poll id> <poll choice>" to cast your vote',
 }
+
+POLL_HELP_MSG = (
+    "```How to set a poll:\nType the !poll command followed by the question, the "
+    "answers, and the time all separated by semicolons. For Example:\n\n "
+    "!poll How many times do you poop daily? ; Less than once ; Once ; Twice ; "
+    "More than twice ; ends in 4 hours\n\nThe final poll expiry has to be in "
+    'the format "ends in X Y" where "X" is any positive integer and "Y" '
+    "is one of (hours, hour, minutes, minute, seconds, second)```"
+)
+
+UNIT_DICT = {
+    "hours": 3600,
+    "hour": 3600,
+    "minutes": 60,
+    "minute": 60,
+    "seconds": 1,
+    "second": 1,
+}
+
+os.makedirs("./polls/", exist_ok=True)
+
+
+def parse_expiry(expiry_str):
+    """
+        Take "ends in X Y" and turn it into a integer time in seconds
+        For example:
+            ends in 62 minutes -> time.time() + 3720
+    """
+    words = expiry_str.split(" ")
+    unit = words.pop(-1).lower()
+    amount = words.pop(-1).lower()
+    return int(time.time()) + int(amount) * UNIT_DICT[unit]
+
+
+def write_poll(prompt, choices, expiry, poll_id, channel_id, votes):
+    """ Write the poll to disk as a json file """
+    data = {
+        "prompt": prompt,
+        "choices": choices,
+        "expiry": expiry,
+        "poll_id": poll_id,
+        "channel_id": channel_id,
+        "votes": votes,
+    }
+    with open(f"./polls/{poll_id}.json", "w") as stream:
+        stream.write(json.dumps(data))
 
 
 class Command(object):
     def __init__(self, user_msg):
-        self._user = str(user_msg.author).split("#")[0]
+        self._full_user = str(user_msg.author)
+        self._user = self._full_user.split("#")[0]
         self._user_msg = user_msg
-        self._commands = {
+        self._channel = user_msg.channel
+        self.commands = {
             "!whisper": self._whisper,
             "!pm": self._whisper,
             "!gif": self._gif,
@@ -46,11 +99,11 @@ class Command(object):
             "!w": self._waifu,
             "!anime": self._anime,
             "!a": self._anime,
+            "!poll": self._poll,
+            "!vote": self._vote,
+            "!v": self._vote,
+            "!p": self._poll,
         }
-
-    @property
-    def commands(self):
-        return self._commands
 
     def _help(self, *args):
         """
@@ -72,6 +125,81 @@ class Command(object):
         )
 
         return "text", ret_msg
+
+    def _vote(self, *args):
+        """
+            Cast a vote on an existing poll
+        """
+        cmd_args = list(args)
+        try:
+            poll_id = cmd_args.pop(0)
+            choice = int(cmd_args.pop(0))
+        except (IndexError, ValueError):
+            return (
+                "text",
+                '```Please format your vote as "!vote <poll id> <choice number>"```',
+            )
+
+        try:
+            with open(f"./polls/{poll_id}.json", "r") as stream:
+                poll_data = json.loads(stream.read())
+        except FileNotFoundError:
+            return "text", f"```Poll {poll_id} does not exist or has expired```"
+
+        choice_len = len(poll_data["choices"])
+
+        if choice not in range(1, choice_len + 1):
+            response = f"```{choice} is not an available selection from:\n\n"
+            for choice_num in range(choice_len):
+                response += f"{choice_num+1}.\t{poll_data['choices'][choice_num]}\n"
+            return "text", f"{response}```"
+
+        for option, takers in poll_data["votes"].items():
+            print(f"option->{option}, takers->{takers}")
+            if self._full_user in takers:
+                poll_data["votes"][option].remove(self._full_user)
+
+        poll_data["votes"][str(choice - 1)].append(self._full_user)
+        write_poll(**poll_data)
+        return "text", f"```You have selected {poll_data['choices'][choice-1]}```"
+
+    def _poll(self, *args):
+        """
+            Start a poll
+        """
+        if "help" in self._user_msg.content.lower():
+            return "text", POLL_HELP_MSG
+
+        full_phrase = " ".join(args)
+        choices = [phrase.strip() for phrase in self._user_msg.content.split(";")]
+        prompt = choices.pop(0)
+
+        try:
+            expiry_str = (
+                choices.pop(-1)
+                if "ends in" in choices[-1].lower()
+                else "ends in 1 hour"
+            )
+            expiry = parse_expiry(expiry_str)
+        except (KeyError, IndexError, ValueError) as error:
+            return "text", POLL_HELP_MSG
+
+        poll_id = str(uuid.uuid4()).split("-")[0]
+
+        votes = {}
+        for choice in range(len(choices)):
+            votes[choice] = []
+
+        write_poll(
+            prompt, choices, expiry, poll_id, channel_id=self._channel.id, votes=votes
+        )
+
+        return_str = f"```{prompt} ({expiry_str})\n\n"
+        for choice_num in range(len(choices)):
+            return_str += f"{choice_num+1}.\t{choices[choice_num]}\n"
+        return_str += f'\n\nType or DM me "!vote {poll_id} <choice number>" to vote```'
+
+        return "text", return_str
 
     def _jeopardy(self, *args):
         """
