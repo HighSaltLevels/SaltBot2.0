@@ -25,7 +25,7 @@ MSG_DICT = {
     "!gif (!g)": (
         "Type !gif followed by keywords to get a cool gif. For " "example: !gif dog"
     ),
-    "!waifu (!w)": ("Get a picture of a personal waifu that's different each" "time"),
+    "!waifu (!w)": "Get a picture of a personal waifu that's different each time",
     "!anime (!a)": "Get an anime recommendation just for you UwU",
     "!nut (!n)": "Receive a funny nut 'n go line",
     "!poll (!p)": 'Type "!poll help" for detailed information',
