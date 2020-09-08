@@ -15,7 +15,7 @@ class Giphy(object):
         self._giphy_kw = giphy_kw
         self._url = self._create_url(self._giphy_kw)
         self._response = self._request()
-        self._num_gifs = len(self._response["data"]) if self._response else 0
+        self._num_gifs = len(self.response["data"]) if self._response else 0
 
     @property
     def num_gifs(self):
@@ -23,7 +23,7 @@ class Giphy(object):
 
     @property
     def response(self):
-        return self._response
+        return self._response.json()
 
     @response.setter
     def response(self, resp):
@@ -41,9 +41,14 @@ class Giphy(object):
         if resp.status_code != HTTPStatus.OK:
             return None
 
-        return resp.json()
+        return resp
 
     def validate_status(self):
+        try:
+            self._response.raise_for_status()
+        except requests.HTTPError as error:
+            raise GiphyError(f"```Sorry, giphy responded with '{error}'```")
+
         # Non-200 status code
         if not self.response:
             raise GiphyError("```Sorry, I had trouble getting that gif :(```")
@@ -62,14 +67,10 @@ class Giphy(object):
                 "query by index!```"
             )
 
-        # Index out of bounds
-        if idx >= self.num_gifs:
+        if idx < 0 or idx > self.num_gifs:
             raise GiphyError(
-                "```Sorry, I didn't have enough gifs to get to that index```"
+                f"```The index must be between 0 and {self.num_gifs} for this query```"
             )
-
-        if idx < 0 or idx > 24:
-            raise GiphyError("```The index must be between 0 and 24```")
 
     def get_gif(self, idx):
         return self.response["data"][int(idx)]["bitly_gif_url"]
