@@ -69,7 +69,7 @@ class Giphy(object):
 
         if idx < 0 or idx > self.num_gifs:
             raise GiphyError(
-                f"```The index must be between 0 and {self.num_gifs} for this query```"
+                f"```The index must be between 0 and {self.num_gifs-1} for this query```"
             )
 
     def get_gif(self, idx):
