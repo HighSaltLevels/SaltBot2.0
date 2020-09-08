@@ -244,7 +244,7 @@ class Command(object):
         """
         args = list(args)
         if "-a" in args:
-            if not isinstance(self._user_msg.channel, discord.channel.PrivateChannel):
+            if not isinstance(self._user_msg.channel, discord.abc.PrivateChannel):
                 return "text", "```You can only use -a in a DM!```"
 
             args.remove("-a")
