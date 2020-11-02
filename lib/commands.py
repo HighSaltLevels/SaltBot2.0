@@ -7,9 +7,11 @@ import uuid
 import discord
 import requests
 
-from lib.giphy import Giphy, GiphyError
+from lib.api import API, APIError
+from lib.giphy import Giphy
 from lib.poll import POLL_DIR
 from lib.version import VERSION
+from lib.youtube import Youtube
 
 MSG_DICT = {
     "!help (!h)": "Shows this help message.",
@@ -23,13 +25,14 @@ MSG_DICT = {
         "playground for experiencing all of the salty features"
     ),
     "!gif (!g)": (
-        "Type !gif followed by keywords to get a cool gif. For " "example: !gif dog"
+        "Type !gif followed by keywords to get a cool gif. For example: !gif dog"
     ),
     "!waifu (!w)": "Get a picture of a personal waifu that's different each time",
     "!anime (!a)": "Get an anime recommendation just for you UwU",
     "!nut (!n)": "Receive a funny nut 'n go line",
     "!poll (!p)": 'Type "!poll help" for detailed information',
     "!vote (!v)": 'Vote in a poll. Type "!vote <poll id> <poll choice>" to cast your vote',
+    "!youtube (!y)": "Get a youtube search result. Use the '-i' parameter to specify an index",
 }
 
 POLL_HELP_MSG = (
@@ -77,6 +80,27 @@ def write_poll(prompt, choices, expiry, poll_id, channel_id, votes):
         stream.write(json.dumps(data))
 
 
+def _get_idx_from_args(args):
+    """ Parse the index from an API response and pick a random number if idx not present """
+    if "-i" in args:
+        if args[len(args) - 1] == "-i":
+            raise ValueError('```Sorry, the last keyword cannot be "-i"```')
+
+        for i in range(len(args)):
+            if args[i] == "-i":
+                idx = args[i + 1]
+                args.remove("-i")
+                args.remove(idx)
+                try:
+                    return int(idx)
+                except ValueError:
+                    raise ValueError(
+                        f"```The argument after '-i' must be an integer```"
+                    )
+
+        return None
+
+
 class Command(object):
     def __init__(self, user_msg):
         self._full_user = str(user_msg.author)
@@ -98,10 +122,12 @@ class Command(object):
             "!w": self._waifu,
             "!anime": self._anime,
             "!a": self._anime,
-            "!poll": self._poll,
             "!vote": self._vote,
             "!v": self._vote,
+            "!poll": self._poll,
             "!p": self._poll,
+            "!youtube": self._youtube,
+            "!y": self._youtube,
         }
 
     def _help(self, *args):
@@ -219,6 +245,7 @@ class Command(object):
 
         # Build and return the questions and answers
         msg = f'The Category is: "{q_and_a["title"]}"\n\n'
+
         for i in range(5):
             question = self._remove_html_crap(q_and_a["clues"][i]["question"])
             answer = self._remove_html_crap(q_and_a["clues"][i]["answer"])
@@ -242,43 +269,49 @@ class Command(object):
         """
             Use the giphy api to query and return one or all gif
         """
+        # Convert from tuple to list so we can modify
         args = list(args)
         if "-a" in args:
             if not isinstance(self._user_msg.channel, discord.abc.PrivateChannel):
                 return "text", "```You can only use -a in a DM!```"
 
             args.remove("-a")
-            giphy = Giphy(args)
+            giphy = Giphy(*args)
             return "list", giphy.all_gifs
 
-        idx = None
-        if "-i" in args:
-            for i in range(len(args)):
-                if args[len(args) - 1] == "-i":
-                    return "text", '```Sorry, the last keyword cannot be "-i"```'
-
-                if args[i] == "-i":
-                    idx = args[i + 1]
-                    args.remove("-i")
-                    args.remove(idx)
-                    break
-
-        giphy = Giphy(args)
-
         try:
-            giphy.validate_status()
-        except GiphyError as error:
+            idx = _get_idx_from_args(args)
+        except ValueError as error:
             return "text", str(error)
 
-        if not idx:
-            idx = randint(0, giphy.num_gifs - 1)
-
         try:
-            giphy.validate_idx(idx)
-        except GiphyError as error:
+            giphy = Giphy(args)
+            if idx is None:
+                idx = randint(0, giphy.num_gifs - 1)
+            return "text", giphy.get_gif(idx)
+
+        except APIError as error:
             return "text", str(error)
 
-        return "text", giphy.get_gif(idx)
+    def _youtube(self, *args):
+        """
+            Use the Youtube API to return a youtube video
+        """
+        # Convert from tuple to list so we can modify
+        args = list(args)
+        try:
+            idx = _get_idx_from_args(args)
+        except ValueError as error:
+            return "text", str(error)
+
+        try:
+            youtube = Youtube(*args)
+            if not idx:
+                idx = randint(0, youtube.num_videos - 1)
+            return "text", youtube.get_video(idx)
+
+        except APIError as error:
+            return "text", str(error)
 
     def _waifu(self, *args):
         for _ in range(5):
