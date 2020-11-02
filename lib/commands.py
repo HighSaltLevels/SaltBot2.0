@@ -208,7 +208,7 @@ class Command(object):
         """
         # Get a random set of questions
         rand = randint(0, 18417)
-        resp = requests.get("http://jservice.io/api/category?id={}".format(rand))
+        resp = requests.get(f"http://jservice.io/api/category?id={rand}")
 
         # Verify status code
         if resp.status_code != 200:
