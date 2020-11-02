@@ -306,8 +306,8 @@ class Command(object):
 
         try:
             youtube = Youtube(*args)
-            if not idx:
-                idx = randint(0, youtube.num_videos - 1)
+            if idx is None:
+                idx = 0
             return "text", youtube.get_video(idx)
 
         except APIError as error:
