@@ -3,7 +3,6 @@ import os
 from lib.api import API
 
 GIPHY_AUTH = os.environ["GIPHY_AUTH"]
-GIPHY_MAX_IDX = 24
 
 
 class Giphy(API):
@@ -20,8 +19,8 @@ class Giphy(API):
 
     def get_gif(self, idx):
         self.validate_num_gifs()
-        print(idx)
-        self.validate_idx(idx, max_idx=GIPHY_MAX_IDX)
+        max_idx = len(self.data["data"])
+        self.validate_idx(idx, max_idx)
         return self.data["data"][idx]["bitly_gif_url"]
 
     @property
