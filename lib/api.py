@@ -36,7 +36,7 @@ class API:
             idx = int(idx)
         except ValueError:
             raise APIError(
-                "```You have to specify an integer if you want " "query by index!```"
+                "```You have to specify an integer if you want query by index!```"
             )
 
         if idx < 0 or idx > max_idx:

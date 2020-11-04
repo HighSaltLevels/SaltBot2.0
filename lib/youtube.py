@@ -12,7 +12,8 @@ class Youtube(API):
 
     def get_video(self, idx):
         self.validate_num_vids()
-        self.validate_idx(idx, max_idx=YOUTUBE_MAX_IDX)
+        max_idx = len(self.data["items"])
+        self.validate_idx(idx, max_idx)
 
         return BASE_URL + self.data["items"][idx]["id"]["videoId"]
 
