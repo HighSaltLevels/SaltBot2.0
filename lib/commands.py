@@ -1,5 +1,7 @@
+""" Command Library """
+
+from copy import deepcopy
 import json
-import os
 from random import randint
 import time
 import uuid
@@ -7,7 +9,7 @@ import uuid
 import discord
 import requests
 
-from lib.api import API, APIError
+from lib.api import APIError
 from lib.giphy import Giphy
 from lib.poll import POLL_DIR
 from lib.version import VERSION
@@ -66,71 +68,78 @@ def parse_expiry(expiry_str):
     return int(time.time()) + int(amount) * UNIT_DICT[unit]
 
 
-def write_poll(prompt, choices, expiry, poll_id, channel_id, votes):
+def write_poll(**kwargs):
     """ Write the poll to disk as a json file """
     data = {
-        "prompt": prompt,
-        "choices": choices,
-        "expiry": expiry,
-        "poll_id": poll_id,
-        "channel_id": channel_id,
-        "votes": votes,
+        "prompt": kwargs["prompt"],
+        "choices": kwargs["choices"],
+        "expiry": kwargs["expiry"],
+        "poll_id": kwargs["poll_id"],
+        "channel_id": kwargs["channel_id"],
+        "votes": kwargs["votes"],
     }
-    with open(f"{POLL_DIR}/{poll_id}.json", "w") as stream:
+    with open(f"{POLL_DIR}/{kwargs['poll_id']}.json", "w") as stream:
         stream.write(json.dumps(data))
 
 
 def _get_idx_from_args(args):
     """ Parse the index from an API response and pick a random number if idx not present """
+    return_args = deepcopy(args)
+    idx = -1
     if "-i" in args:
         if args[len(args) - 1] == "-i":
             raise ValueError('```Sorry, the last keyword cannot be "-i"```')
 
-        for i in range(len(args)):
+        num_args = len(args)
+        for i in range(num_args):
             if args[i] == "-i":
                 idx = args[i + 1]
-                args.remove("-i")
-                args.remove(idx)
-                try:
-                    return int(idx)
-                except ValueError:
-                    raise ValueError(
-                        f"```The argument after '-i' must be an integer```"
-                    )
+                return_args.remove("-i")
+                return_args.remove(idx)
 
-        return None
+        try:
+            print(idx)
+            return int(idx), return_args
+        except ValueError as error:
+            raise ValueError(
+                "```The argument after '-i' must be an integer```"
+            ) from error
+
+    return idx, return_args
 
 
-class Command(object):
+class Command:
+    """ Command Object for executing a SaltBot command """
+
     def __init__(self, user_msg):
         self._full_user = str(user_msg.author)
         self._user = self._full_user.split("#")[0]
         self._user_msg = user_msg
         self._channel = user_msg.channel
         self.commands = {
-            "!whisper": self._whisper,
-            "!pm": self._whisper,
-            "!gif": self._gif,
-            "!g": self._gif,
-            "!nut": self._nut,
-            "!u": self._nut,
-            "!jeopardy": self._jeopardy,
-            "!j": self._jeopardy,
-            "!help": self._help,
-            "!h": self._help,
-            "!waifu": self._waifu,
-            "!w": self._waifu,
-            "!anime": self._anime,
-            "!a": self._anime,
-            "!vote": self._vote,
-            "!v": self._vote,
-            "!poll": self._poll,
-            "!p": self._poll,
-            "!youtube": self._youtube,
-            "!y": self._youtube,
+            "!whisper": self.whisper,
+            "!pm": self.whisper,
+            "!gif": self.gif,
+            "!g": self.gif,
+            "!nut": self.nut,
+            "!u": self.nut,
+            "!jeopardy": self.jeopardy,
+            "!j": self.jeopardy,
+            "!help": self.help,
+            "!h": self.help,
+            "!waifu": self.waifu,
+            "!w": self.waifu,
+            "!anime": self.anime,
+            "!a": self.anime,
+            "!vote": self.vote,
+            "!v": self.vote,
+            "!poll": self.poll,
+            "!p": self.poll,
+            "!youtube": self.youtube,
+            "!y": self.youtube,
         }
 
-    def _help(self, *args):
+    def help(self):
         """
             Return a help message that gives a list of commands
         """
@@ -151,7 +160,7 @@ class Command(object):
 
         return "text", ret_msg
 
-    def _vote(self, *args):
+    def vote(self, *args):
         """
             Cast a vote on an existing poll
         """
@@ -187,48 +196,47 @@ class Command(object):
         write_poll(**poll_data)
         return "text", f"```You have selected {poll_data['choices'][choice-1]}```"
 
-    def _poll(self, *args):
+    def poll(self, *args):
         """
             Start a poll
         """
-        if "help" in self._user_msg.content.lower():
+        poll_data = {}
+        if len(args) == 0:
             return "text", POLL_HELP_MSG
 
         if isinstance(self._channel, discord.channel.DMChannel):
             return "text", "```Polls don't work in DMs :(```"
 
-        full_phrase = " ".join(args)
-        choices = [phrase.strip() for phrase in self._user_msg.content.split(";")]
-        prompt = choices.pop(0)
+        poll_data["choices"] = [
+            phrase.strip() for phrase in self._user_msg.content.split(";")
+        ]
+        poll_data["prompt"] = poll_data["choices"].pop(0)
 
         try:
             expiry_str = (
-                choices.pop(-1)
-                if "ends in" in choices[-1].lower()
+                poll_data["choices"].pop(-1)
+                if "ends in" in poll_data["choices"][-1].lower()
                 else "ends in 1 hour"
             )
-            expiry = parse_expiry(expiry_str)
-        except (KeyError, IndexError, ValueError) as error:
+            poll_data["expiry"] = parse_expiry(expiry_str)
+        except (KeyError, IndexError, ValueError):
             return "text", POLL_HELP_MSG
 
-        poll_id = str(uuid.uuid4()).split("-")[0]
+        poll_data["poll_id"] = str(uuid.uuid4()).split("-")[0]
+        poll_data["votes"] = {idx: [] for idx in range(len(poll_data["choices"]))}
+        poll_data["channel_id"] = self._channel.id
 
-        votes = {}
-        for choice in range(len(choices)):
-            votes[choice] = []
+        write_poll(**poll_data)
 
-        write_poll(
-            prompt, choices, expiry, poll_id, channel_id=self._channel.id, votes=votes
-        )
-
-        return_str = f"```{prompt} ({expiry_str})\n\n"
-        for choice_num in range(len(choices)):
-            return_str += f"{choice_num+1}.\t{choices[choice_num]}\n"
-        return_str += f'\n\nType or DM me "!vote {poll_id} <choice number>" to vote```'
+        return_str = f"```{poll_data['prompt']} ({expiry_str})\n\n"
+        for choice_num in range(len(poll_data["choices"])):
+            return_str += f"{choice_num+1}.\t{poll_data['choices'][choice_num]}\n"
+        return_str += f'\n\nType or DM me "!vote {poll_data["poll_id"]} <choice number>" to vote```'
 
         return "text", return_str
 
-    def _jeopardy(self, *args):
+    @staticmethod
+    def jeopardy():
         """
             Return a 5 jeopardy questions and answers
         """
@@ -247,13 +255,13 @@ class Command(object):
         msg = f'The Category is: "{q_and_a["title"]}"\n\n'
 
         for i in range(5):
-            question = self._remove_html_crap(q_and_a["clues"][i]["question"])
-            answer = self._remove_html_crap(q_and_a["clues"][i]["answer"])
+            question = _remove_html_crap(q_and_a["clues"][i]["question"])
+            answer = _remove_html_crap(q_and_a["clues"][i]["answer"])
             msg += f"Question {i+1}: {question}\nAnswer: ||{answer}||\n\n"
 
         return "text", msg
 
-    def _whisper(self, *args):
+    def whisper(self):
         """
             Return a hello message as a DM to the person who requested
         """
@@ -265,69 +273,73 @@ class Command(object):
             ),
         )
 
-    def _gif(self, *args):
+    def gif(self, *args):
         """
             Use the giphy api to query and return one or all gif
         """
         # Convert from tuple to list so we can modify
         args = list(args)
+        if len(args) == 0:
+            return "text", '```You have to type "!gif <query>"```'
+
         if "-a" in args:
             if not isinstance(self._user_msg.channel, discord.abc.PrivateChannel):
                 return "text", "```You can only use -a in a DM!```"
 
             args.remove("-a")
-            giphy = Giphy(*args)
+            giphy = Giphy(args)
             return "list", giphy.all_gifs
 
         try:
-            idx = _get_idx_from_args(args)
+            idx, args = _get_idx_from_args(args)
         except ValueError as error:
             return "text", str(error)
 
         try:
-            giphy = Giphy(args)
-            if idx is None:
-                idx = randint(0, giphy.num_gifs - 1)
+            giphy = Giphy(*args)
+            idx = randint(0, giphy.num_gifs - 1) if idx == -1 else idx
             return "text", giphy.get_gif(idx)
 
         except APIError as error:
             return "text", str(error)
 
-    def _youtube(self, *args):
+    @staticmethod
+    def youtube(*args):
         """
             Use the Youtube API to return a youtube video
         """
         # Convert from tuple to list so we can modify
-        args = list(args)
         try:
-            idx = _get_idx_from_args(args)
+            idx, args = _get_idx_from_args(list(args))
+            idx = 0 if idx == -1 else idx
         except ValueError as error:
             return "text", str(error)
 
         try:
             youtube = Youtube(*args)
-            if idx is None:
-                idx = 0
-            return "text", youtube.get_video(idx)
-
         except APIError as error:
             return "text", str(error)
 
-    def _waifu(self, *args):
+        return "text", youtube.get_video(idx)
+
+    @staticmethod
+    def waifu():
+        """ Get a picture of a waifu from thiswaifudoesnotexist.com """
         for _ in range(5):
             rand = randint(0, 99999)
             url = f"https://www.thiswaifudoesnotexist.net/example-{rand}.jpg"
 
             resp = requests.get(url, stream=True)
             if resp.status_code == 200:
-                with open("temp.jpg", "wb") as fw:
-                    fw.write(resp.content)
+                with open("temp.jpg", "wb") as stream:
+                    stream.write(resp.content)
                 return "file", "temp.jpg"
 
-        log("admin", f"Got HTTP Status {resp.status_code} with content -> {resp.text}")
         return "text", "```Sorry, I coudn't get that waifu :(```"
 
-    def _anime(self, *args):
+    @staticmethod
+    def anime():
+        """ Get a random anime recommendation """
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux i586; rv:63.0) Gecko/20100101 Firefox/63.0."
         }
@@ -341,8 +353,9 @@ class Command(object):
         for char in data[title_idx:]:
             if char == "<":
                 break
-            else:
-                title += char
+
+            title += char
+
         title = title[6:-15]
 
         description_idx = data.find("content=")
@@ -351,8 +364,9 @@ class Command(object):
         for char in data[description_idx:]:
             if char == "/":
                 break
-            else:
-                description += char
+
+            description += char
+
         return (
             "text",
             "```Here's an anime for you:\n\nTitle:\n{}\n\nDescription:\n{}```".format(
@@ -360,18 +374,21 @@ class Command(object):
             ),
         )
 
-    def _nut(self, *args):
-        with open("nut.txt") as fread:
-            lines = [line for line in fread.readlines()]
+    def nut(self):
+        """ Send a funny "nut" line """
+        with open("nut.txt") as stream:
+            lines = stream.readlines()
 
         rand = randint(0, len(lines) - 1)
         return "text", f"```Remember {self._user}, don't {lines[rand]}```"
 
-    def _remove_html_crap(self, text):
-        return (
-            text.replace("<i>", "")
-            .replace("</i>", "")
-            .replace("<b>", "")
-            .replace("</b>", "")
-            .replace("\\", " ")
-        )
+
+def _remove_html_crap(text):
+    """ Strip out all poorly formatted html stuff """
+    return (
+        text.replace("<i>", "")
+        .replace("</i>", "")
+        .replace("<b>", "")
+        .replace("</b>", "")
+        .replace("\\", " ")
+    )

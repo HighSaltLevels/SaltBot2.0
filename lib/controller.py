@@ -1,8 +1,4 @@
-import asyncio
-import glob
-import json
-import time
-
+""" Controller module for handling coroutines """
 import discord
 
 from lib.commands import Command
@@ -15,6 +11,7 @@ CLIENT = discord.Client()
 
 @CLIENT.event
 async def on_message(msg):
+    """ Main Message Event Handler """
     # Only do something if command starts with ! or bot is not sending message
     if msg.author != CLIENT.user and msg.content.startswith("!"):
         LOGGER.log_received(msg.author, msg.channel, msg.content)
@@ -49,6 +46,7 @@ async def on_message(msg):
 
 @CLIENT.event
 async def on_ready():
+    """ Print out basic info and set status on startup """
     LOGGER.log("Logged in as")
     LOGGER.log(CLIENT.user.name)
     LOGGER.log(str(CLIENT.user.id))

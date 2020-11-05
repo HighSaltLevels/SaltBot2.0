@@ -1,3 +1,4 @@
+""" modlue for poll operations """
 import asyncio
 import glob
 import json
@@ -29,7 +30,11 @@ async def monitor_polls(discord_client):
                 try:
                     for result in results:
                         choice = poll_data["choices"][result]
-                        response += f"\t{choice} -> {float(len(poll_data['votes'][str(result)])/total_votes) * 100:.0f}%\n"
+                        response += (
+                            f"\t{choice} -> "
+                            f"{float(len(poll_data['votes'][str(result)])/total_votes) * 100:.0f}"
+                            "%\n"
+                        )
                 except ZeroDivisionError:
                     response = "```No one voted on this poll :("
 
