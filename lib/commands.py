@@ -273,6 +273,7 @@ class Command:
             ),
         )
 
+    #  pylint: disable=too-many-return-statements
     def gif(self, *args):
         """
             Use the giphy api to query and return one or all gif
@@ -302,6 +303,9 @@ class Command:
 
         except APIError as error:
             return "text", str(error)
+
+        except ValueError:
+            return "text", "```Sorry, there were no gifs for that query :(```"
 
     @staticmethod
     def youtube(*args):
