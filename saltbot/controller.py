@@ -1,9 +1,9 @@
 """ Controller module for handling coroutines """
 import discord
 
-from lib.commands import Command
-from lib.logger import Logger
-from lib.poll import monitor_polls
+from commands import Command
+from logger import Logger
+from poll import monitor_polls
 
 LOGGER = Logger()
 CLIENT = discord.Client()

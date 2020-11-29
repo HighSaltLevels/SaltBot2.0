@@ -1,6 +1,6 @@
 """ Module for youtube related operations """
 import os
-from lib.api import API, APIError
+from api import API, APIError
 
 YOUTUBE_AUTH = os.environ["YOUTUBE_AUTH"]
 YOUTUBE_MAX_IDX = 49

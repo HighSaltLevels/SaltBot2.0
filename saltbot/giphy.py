@@ -1,7 +1,7 @@
 """ Giphy interface module """
 import os
 
-from lib.api import API, APIError
+from api import API, APIError
 
 GIPHY_AUTH = os.environ["GIPHY_AUTH"]
 

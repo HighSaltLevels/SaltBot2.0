@@ -3,7 +3,7 @@
 """
 import os
 
-from lib.controller import CLIENT
+from controller import CLIENT
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 
