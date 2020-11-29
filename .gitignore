@@ -1,3 +1,4 @@
 log.txt
 temp.jpg
 **/__pycache__/**
+auth.env
