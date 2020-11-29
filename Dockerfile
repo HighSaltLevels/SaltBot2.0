@@ -1,22 +1,17 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && \ 
-	apt-get install -y python3 python3-pip && \
-	pip3 install requests==2.18.4 \
-                 discord==0.16.12 && \
-	mkdir -p /opt/saltbot
+COPY requirements.txt saltbot /saltbot/
 
-ARG GIPHY_AUTH
-ARG BOT_TOKEN
-ARG EMAIL_PASSWORD
+RUN cd /saltbot && \
+    apt-get update && \ 
+	apt-get install --no-install-recommends -y \
+        build-essential \
+        python3-dev \
+        python3-pip \
+        python3-setuptools \
+        python3-wheel && \
+    pip3 install -r requirements.txt
 
-ENV GIPHY_AUTH=${GIPHY_AUTH} \
-	BOT_TOKEN=${BOT_TOKEN} \
-	EMAIL_PASSWORD=${EMAIL_PASSWORD}
+WORKDIR /saltbot
 
-COPY saltbot2.py /opt/saltbot/
-COPY lib /opt/saltbot/lib
-
-WORKDIR /opt/saltbot
-
-CMD python3 /opt/saltbot/saltbot2.py
+CMD python3 /saltbot

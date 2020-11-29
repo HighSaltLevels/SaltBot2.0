@@ -9,11 +9,11 @@ import uuid
 import discord
 import requests
 
-from lib.api import APIError
-from lib.giphy import Giphy
-from lib.poll import POLL_DIR
-from lib.version import VERSION
-from lib.youtube import Youtube
+from api import APIError
+from giphy import Giphy
+from poll import POLL_DIR
+from version import VERSION
+from youtube import Youtube
 
 MSG_DICT = {
     "!help (!h)": "Shows this help message.",
