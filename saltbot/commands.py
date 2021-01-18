@@ -204,9 +204,6 @@ class Command:
         if len(args) == 0:
             return "text", POLL_HELP_MSG
 
-        if isinstance(self._channel, discord.channel.DMChannel):
-            return "text", "```Polls don't work in DMs :(```"
-
         poll_data["choices"] = [
             phrase.strip() for phrase in self._user_msg.content.split(";")
         ]
