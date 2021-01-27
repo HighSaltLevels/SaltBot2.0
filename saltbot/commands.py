@@ -204,6 +204,9 @@ class Command:
         if len(args) == 0:
             return "text", POLL_HELP_MSG
 
+        if args[0] == "help":
+            return "text", POLL_HELP_MSG
+
         poll_data["choices"] = [
             phrase.strip() for phrase in self._user_msg.content.split(";")
         ]
