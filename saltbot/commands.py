@@ -37,6 +37,15 @@ MSG_DICT = {
     "!youtube (!y)": "Get a youtube search result. Use the '-i' parameter to specify an index",
 }
 
+UNIT_DICT = {
+    "hours": 3600,
+    "hour": 3600,
+    "minutes": 60,
+    "minute": 60,
+    "seconds": 1,
+    "second": 1,
+}
+
 POLL_HELP_MSG = (
     "```How to set a poll:\nType the !poll command followed by the question, the "
     "answers, and the time all separated by semicolons. For Example:\n\n "
@@ -46,14 +55,16 @@ POLL_HELP_MSG = (
     "is one of (hours, hour, minutes, minute, seconds, second)```"
 )
 
-UNIT_DICT = {
-    "hours": 3600,
-    "hour": 3600,
-    "minutes": 60,
-    "minute": 60,
-    "seconds": 1,
-    "second": 1,
-}
+REMIND_HELP_MSG = (
+    "```The remind command follows this syntax:\n\n!remind <command> <option> in "
+    "<number> <time units>\n\nCommands are as follows:\nset: Set a reminder\nshow: "
+    "list all reminders\ndelete: delete a reminder\n\nThe options vary per command. "
+    "Here is an example of setting a reminder, showing reminders, and deleting a "
+    "reminder\n\n!remind fix all the saltbot bugs in 2 hours\n!remind show\n!remind "
+    f"delete f420f69f\n\nNotes:\n - time units include {list(UNIT_DICT.keys())}\n"
+    ' - Each reminder gets assigned an ID. "!remind show" will give you the ID of '
+    "each reminder"
+)
 
 
 def parse_expiry(expiry_str):
@@ -159,6 +170,15 @@ class Command:
         )
 
         return "text", ret_msg
+
+    def remind(self, *args):
+        """
+            Set a reminder
+        """
+        if len(args) == 0:# or args[0] == 'help':
+            return REMIND_HELP_MSG
+
+        
 
     def vote(self, *args):
         """
