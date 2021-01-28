@@ -35,6 +35,7 @@ MSG_DICT = {
     "!poll (!p)": 'Type "!poll help" for detailed information',
     "!vote (!v)": 'Vote in a poll. Type "!vote <poll id> <poll choice>" to cast your vote',
     "!youtube (!y)": "Get a youtube search result. Use the '-i' parameter to specify an index",
+    "!remind (!r)": 'Set a reminder. Type "remind help" for detailed information',
 }
 
 UNIT_DICT = {
@@ -148,6 +149,8 @@ class Command:
             "!p": self.poll,
             "!youtube": self.youtube,
             "!y": self.youtube,
+            "!remind": self.remind,
+            "r": self.remind,
         }
 
     def help(self):

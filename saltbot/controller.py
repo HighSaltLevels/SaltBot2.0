@@ -1,4 +1,6 @@
 """ Controller module for handling coroutines """
+import traceback
+
 import discord
 
 from commands import Command
@@ -26,22 +28,26 @@ async def on_message(msg):
                 '"!help" to see a list of available commands\n```'
             )
 
-        else:
+        try: 
             type_, resp = bot_cmd.commands[cmd](*args)
             LOGGER.log_sent(msg.author, msg.channel, cmd)
 
             if type_ == "text":
                 await msg.channel.send(resp)
-            elif type_ == "file":
+
+            if type_ == "file":
                 await msg.channel.send(file=discord.File(resp))
-            elif type_ == "list":
+
+            if type_ == "list":
                 for item in resp:
                     await msg.channel.send(item)
-            elif type_ == "user":
+
+            if type_ == "user":
                 await msg.author.send(resp)
-            else:
-                err_msg = "```Unexpected error :(```"
-                await msg.channel.send(err_msg)
+
+        except:
+            traceback.print_exc()
+            await msg.channel.send("```Unexpected error :(```")
 
 
 @CLIENT.event
